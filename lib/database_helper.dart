@@ -16,11 +16,12 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final String path = join(await getDatabasesPath(), 'users.db');
+    final String path = join(await getDatabasesPath(), 'tahura_users.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Increment version to trigger onUpgrade
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -30,9 +31,28 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         email TEXT UNIQUE,
-        password TEXT
+        password TEXT,
+        profile_image TEXT
       )
     ''');
+  }
+
+  // Tambahkan method onUpgrade untuk migrasi database
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE users ADD COLUMN profile_image TEXT');
+    }
+  }
+
+  // Tambahkan method untuk update profile image
+  Future<int> updateProfileImage(String email, String imagePath) async {
+    final Database db = await database;
+    return await db.update(
+      'users',
+      {'profile_image': imagePath},
+      where: 'email = ?',
+      whereArgs: [email],
+    );
   }
 
   Future<int> insertUser(String name, String email, String password) async {

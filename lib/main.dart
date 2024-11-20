@@ -4,6 +4,8 @@ import 'register_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'map_screen.dart';
+import 'pages/chat_screen.dart';
+import 'weather_screen.dart'; // Import weather_screen
 
 void main() {
   runApp(const MyApp());
@@ -21,11 +23,13 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/login',
       routes: {
-        '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
+        '/login': (context) => LoginScreen(), // Removed const
+        '/register': (context) => RegisterScreen(), // Removed const
         '/home': (context) => HomeScreen(email: ModalRoute.of(context)!.settings.arguments as String),
         '/profile': (context) => ProfileScreen(email: ModalRoute.of(context)!.settings.arguments as String),
-        '/map': (context) => const OSMFlutterMap(),
+        '/map': (context) => OSMFlutterMap(), // Removed const
+        '/chat': (context) => ChatScreen(), // Removed const
+        '/weather': (context) => WeatherScreen(), // Removed const
       },
     );
   }

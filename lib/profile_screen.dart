@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:myapp/database_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -11,6 +14,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _userData;
+  File? _imageFile;
 
   @override
   void initState() {
@@ -24,6 +28,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final user = await dbHelper.getUserByEmail(widget.email!);
       setState(() {
         _userData = user;
+        // Cek apakah ada path gambar tersimpan
+        if (user != null && user['profile_image'] != null) {
+          _imageFile = File(user['profile_image']);
+        }
+      });
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final dbHelper = DatabaseHelper();
+      await dbHelper.updateProfileImage(widget.email!, pickedFile.path);
+
+      setState(() {
+        _imageFile = File(pickedFile.path);
       });
     }
   }
@@ -31,34 +53,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Profile'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Profil Saya',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: Colors.white),
             onPressed: () {
-              Navigator.pushNamed(context, '/login'); 
+              Navigator.pushNamedAndRemoveUntil(
+                context, 
+                '/login', 
+                (route) => false
+              );
             },
           ),
         ],
       ),
-      body: _userData == null
-          ? const Center(child: Text('User not found'))
-          : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Name: ${_userData!['name']}'),
-                  Text('Email: ${_userData!['email']}'),
-                  Text('Password: ${_userData!['password']}'),
-                ],
-              ),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('lib/assets/screen.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: _userData == null
+                ? CircularProgressIndicator()
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Foto Profil
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          radius: 80,
+                          backgroundColor: Colors.white.withOpacity(0.3),
+                          backgroundImage: _imageFile != null 
+                            ? FileImage(_imageFile!) 
+                            : null,
+                          child: _imageFile == null 
+                            ? Icon(
+                                Icons.camera_alt, 
+                                size: 50, 
+                                color: Colors.white
+                              )
+                            : null,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      
+                      // Informasi Pengguna
+                      _buildProfileInfo(
+                        'Nama', 
+                        _userData!['name'] ?? 'Tidak ada nama'
+                      ),
+                      _buildProfileInfo(
+                        'Email', 
+                        _userData!['email'] ?? 'Tidak ada email'
+                      ),
+                      
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[700],
+                        ),
+                        onPressed: _pickImage,
+                        child: Text('Ubah Foto Profil'),
+                      )
+                    ],
+                  ),
+          ),
+        ),
+      ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.green[700],
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white54,
+        currentIndex: 0,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'Profil',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -66,24 +150,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
-            label: 'Map',
+            label: 'Peta',
           ),
         ],
-        currentIndex: 0,
-        selectedItemColor: Colors.amber[800],
         onTap: (index) {
           if (index == 1) {
             if (widget.email != null) {
               Navigator.pushReplacementNamed(context, '/home', arguments: widget.email);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please login first')),
-              );
             }
           } else if (index == 2) {
             Navigator.pushNamed(context, '/map');
           }
         },
+      ),
+    );
+  }
+
+  Widget _buildProfileInfo(String label, String value) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      padding: EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.roboto(
+               color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
