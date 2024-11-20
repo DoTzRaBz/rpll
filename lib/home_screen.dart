@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/profile_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:myapp/pages/chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -53,48 +54,22 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Home'),
       ),
-      body: Stack(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // ... other widgets ...
-            ],
-          ),
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: isLoading
-                  ? const CircularProgressIndicator()
-                  : Row(
-                      children: [
-                        Image.network(
-                          weatherIconUrl!,
-                          width: 50,
-                          height: 50,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Image.network('https://via.placeholder.com/50'), // Default image on error
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${weatherData['weather'][0]['main']}',
-                              style: TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                            Text(
-                              '${weatherData['weather'][0]['description']}',
-                              style: TextStyle(fontSize: 16, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-            ),
-          ),
-        ],
+      body: Center(
+        child: ElevatedButton.icon(
+          onPressed: () {
+            Navigator.pushNamed(context, '/chat');
+          },
+          icon: const Icon(Icons.chat),
+          label: const Text('Go to Chat'),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color.fromRGBO(82, 170, 94, 1.0),
+        tooltip: 'Go to Chat',
+        onPressed: () {
+          Navigator.pushNamed(context, '/chat');
+        },
+        child: const Icon(Icons.chat, color: Colors.white, size: 28),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
